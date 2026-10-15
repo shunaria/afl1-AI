@@ -36,14 +36,27 @@ class QueueFrontier(StackFrontier):
 		return self.frontier.popleft()
 
 
+# Assumption: the two road columns in the image are parallel branches
+# from Jalan Timor and merge at Jalan Haji Bau.
 GRAPH = {
-	"Denpasar": ["Kuta", "Mengwi", "Ngerebong"],
-	"Kuta": ["Denpasar"],
-	"Mengwi": ["Denpasar", "Ubud"],
-	"Ngerebong": ["Denpasar", "Sukawati", "Ubud"],
-	"Sukawati": ["Ngerebong", "Padangbai"],
-	"Ubud": ["Mengwi", "Ngerebong", "Padangbai"],
-	"Padangbai": ["Sukawati", "Ubud"],
+	"jalan irian": ["jalan timor"],
+	"jalan timor": ["jalan irian", "jalan nusantara", "jalan sulawesi"],
+	"jalan nusantara": ["jalan timor", "jalan ujung pandang"],
+	"jalan ujung pandang": ["jalan nusantara", "jalan pattimura"],
+	"jalan pattimura": ["jalan ujung pandang", "jalan somba opu"],
+	"jalan somba opu": ["jalan pattimura", "jalan datumuseng"],
+	"jalan datumuseng": ["jalan somba opu", "jalan lamadukelleng"],
+	"jalan lamadukelleng": ["jalan datumuseng", "jalan haji bau"],
+	"jalan sulawesi": ["jalan timor", "jalan riburane"],
+	"jalan riburane": ["jalan sulawesi", "jalan ahmad yani"],
+	"jalan ahmad yani": ["jalan riburane", "jalan kajaolalido"],
+	"jalan kajaolalido": ["jalan ahmad yani", "jalan botolempangan"],
+	"jalan botolempangan": ["jalan kajaolalido", "jalan arif rate"],
+	"jalan arif rate": ["jalan botolempangan", "jalan haji bau"],
+	"jalan haji bau": ["jalan arif rate", "jalan lamadukelleng", "jalan metro tanjung bunga"],
+	"jalan metro tanjung bunga": ["jalan haji bau", "masuk ke CPI"],
+	"masuk ke CPI": ["jalan metro tanjung bunga", "sampai UCM"],
+	"sampai UCM": ["masuk ke CPI"],
 }
 
 
@@ -54,7 +67,7 @@ def graph_search(start, goal, frontier):
 	while not frontier.empty():
 		node = frontier.remove()
 
-		# Goal diuji saat node dikeluarkan dari frontier, sebelum diekspansi.
+		# Test the goal when it is removed, before expanding it.
 		if node.state == goal:
 			path = []
 			while node is not None:
@@ -63,8 +76,9 @@ def graph_search(start, goal, frontier):
 			return list(reversed(path)), explored
 
 		explored.add(node.state)
-
 		neighbors = sorted(GRAPH.get(node.state, []))
+
+		# Reverse push order so a stack visits neighbors alphabetically.
 		if isinstance(frontier, StackFrontier) and not isinstance(frontier, QueueFrontier):
 			neighbors.reverse()
 
@@ -76,10 +90,9 @@ def graph_search(start, goal, frontier):
 
 
 if __name__ == "__main__":
-	solution, explored = graph_search(
-		"Denpasar",
-		"Padangbai",
-		QueueFrontier(),
-	)
+	start = "jalan irian"
+	goal = "sampai UCM"
+	solution, explored = graph_search(start, goal, QueueFrontier())
+
 	print("Jalur:", " -> ".join(solution) if solution else "Tidak ditemukan")
 	print("Node diekspansi:", sorted(explored))
